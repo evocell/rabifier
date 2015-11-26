@@ -1,0 +1,22 @@
+{
+  "param":{
+    "cpu": 1,
+    "fast": false,
+    "bh_evalue": 1e-10,
+    "motif_evalue": 1e-04,
+    "motif_number": 1,
+    "subfamily_identity": 0.4,
+    "subfamily_score": 0.2,
+    "subfamily_identity_threshold": 0.98,
+    "non_rab_db_identity_threshold": 0.65,
+    "rab_f_identity_threshold": 0.8
+  },
+  "seed":{
+    "rab_name_list": "rab_name_list.dat",
+    "rab_db": "rab_db.fasta",
+    "non_rab_db": "non_rab_db.fasta",
+    "rab_f": "rab_f.meme",
+    "rab_subfamily_hmm": "rab_subfamily.hmm",
+    "rab_subfamily_model": "rab_subfamily_model.json"
+  }
+}

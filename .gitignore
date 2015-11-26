@@ -1,0 +1,10 @@
+*.log
+*.pyc
+
+bin/*
+!bin/.keep
+
+data/seed/*
+!data/seed/.keep
+data/source/*
+!data/source/.keep
