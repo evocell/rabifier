@@ -1,0 +1,3 @@
+include README.md
+include rabifier/config.json
+include rabifier/data/*
