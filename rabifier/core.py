@@ -442,9 +442,8 @@ class Seed(object):
 def main():
     parser = argparse.ArgumentParser(description="Rabifier: a bioinformatic classifier of Rab GTPases (v{})".format(__version__))
     parser.add_argument('-v', '--version', action='version', version=__version__)
-    parser.add_argument('source', help="Source data directory",
-                        choices=('build', 'test'), default='text')
-    parser.add_argument('-o, --output', help="Path to a directory where the ouput files will be stored [{}]".format(
+    parser.add_argument('source', help="Source data directory", type=str)
+    parser.add_argument('-o', '--output', help="path to a directory where the output files will be stored [{}]".format(
         os.path.join(config['tmp'], 'rabifier')), type=str, default=os.path.join(config['tmp'], 'rabifier'))
     parser.add_argument('--cpu', help="maximal number of threads to use [{}]".format(config['param']['cpu']), type=int,
                         default=config['param']['cpu'])

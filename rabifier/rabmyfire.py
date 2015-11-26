@@ -518,8 +518,7 @@ def main():
     parser = argparse.ArgumentParser(description="Rabifier: a bioinformatic classifier of Rab GTPases (v{})".format(__version__))
     parser.add_argument('-v', '--version', action='version', version=__version__)
     parser.add_argument('input', help="input file name, a fasta file containing protein sequence(s)")
-    parser.add_argument('-o', '--output', help="output file name [-]", type=argparse.FileType('wb'),
-                        default='-')
+    parser.add_argument('-o', '--output', help="output file name [-]", type=argparse.FileType('wb'), default='-')
     parser.add_argument('--outfmt', help="output format [text]", choices=('text', 'json', 'csv'), default='text')
     parser.add_argument('--cpu', help="maximal number of threads to use [{}]".format(config['param']['cpu']), type=int,
                         default=config['param']['cpu'])
