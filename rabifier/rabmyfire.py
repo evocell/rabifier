@@ -391,16 +391,10 @@ class Phase2(object):
     def scan_subfamilies(self):
         protein2subfam = {}
 
-        # the list of rab subfamilies that are considered by the Rabifier; for now, ONLY SUBFAMILIES OCCURRING IN UNIKONTS
-        # ARE INCLUDED!! means that has to be changed once all Eukaryotes are covered!!
-        # (BUT THE FILES ABOVE MUST HAVE BEEN GENERATED ACCORDINGLY!!!!)
-        # one could imagine that this also becomes a parameter one day (because of prior phylogenetic knowledge
-        # about the sequences the user wishes to exclude some subfamilies as valid results)
-        with open(get_db_file('rab_name_list')) as fin:
-            all_rab_subfamilies = [line.strip() for line in fin if line.strip() and not line.startswith('#')]
+        rab_subfamilies = config['rab_subfamilies']
         for seq in SeqIO.parse(self.fastafile, 'fasta'):
             protein2subfam[seq.id] = {}
-            for rab_subfam in all_rab_subfamilies:
+            for rab_subfam in rab_subfamilies:
                 protein2subfam[seq.id][rab_subfam] = {'evalue_hmmscan': 10, 'evalue_phmmer': 10,
                                                       'bh_phmmer': None, 'identity': 0.0}
 

@@ -51,7 +51,7 @@ class Seed(object):
     """
 
     def __init__(self, source, **kwargs):
-        self.source = source
+        self.source = os.path.abspath(source)
         self.pathfinder = Pathfinder(True)
 
         # Temporary folders, create if do not exist
@@ -83,11 +83,11 @@ class Seed(object):
         # Technical parameters
         self.cpu = str(kwargs.get('cpu', config['param']['cpu']))
 
-        # check if the datasets and third party tools, necessary to prepare the seed database, are available
+        # Check if the datasets and third party tools, necessary to prepare the seed database, are available
         self.check()
 
-        with open(self.path['rab_name_list']) as fin:
-            self.rab_subfamilies = [line.strip() for line in fin if line.strip() and not line.startswith('#')]
+        # Load subfamily names that will be considered for the seed database construction
+        self.rab_subfamilies = config['rab_subfamilies']
 
     def get_subfamily_path(self, subfamily, extension=None):
         path = os.path.join(self.path_tmp, 'build', subfamily)
@@ -239,7 +239,7 @@ class Seed(object):
         rab_subfamily2logistic_fit = {}
 
         # load manual logistic fit parameters, which override parameters estimated from the data
-        # TODO TODO TODO I tried to fit one per subfamily, but then tings like favor Rab31, ypt11, i.e. highly
+        # TODO I tried to fit one per subfamily, but then tings like favor Rab31, ypt11, i.e. highly
         # skewed distributions !!!! ONLY IF VALUES ARE CONSISTENTLY LOW !!!!! hope to catch those cases by
         # <40%ID etc. !!
         # EXCEPTION !! otherwise fit is too sharp !!
