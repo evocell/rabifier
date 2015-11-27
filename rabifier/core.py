@@ -62,7 +62,6 @@ class Seed(object):
                 os.makedirs(path)
 
         self.path = {
-            'rab_name_list': os.path.join(self.source, 'other', config['seed']['rab_name_list']),
             'non_rab_db': os.path.join(self.source, 'other', '{}.full'.format(config['seed']['non_rab_db'])),
             'rab_subfamily_model_manual_override':
                 os.path.join(self.source, 'other', 'rab_subfamilies_logreg_params.dat'),

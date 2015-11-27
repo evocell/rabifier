@@ -64,6 +64,9 @@ class Gprotein(object):
         self.rab_subfamily_score = None
         self.rab_subfamily_top5 = []
 
+    def __str__(self):
+        return self.summarize()
+
     def is_gprotein(self):
         return True if self.gdomain_regions else False
 
@@ -123,18 +126,27 @@ class Gprotein(object):
         ]
 
     def summarize(self):
-        summary = [
-            str(self.seqrecord),
-            'G domain: {}'.format(' '.join(self.gdomain_regions)),
-            'e-value vs rab database: {}'.format(self.evalue_bh_rabs),
-            'e-value vs non-rab database: {}'.format(self.evalue_bh_non_rabs),
-            'Rab F motifs: {}'.format(' '.join(map(str, self.rabf_motifs))),
-            'Is Rab: {}'.format(self.is_rab()),
-            'Rab subfamily: {} (score: {})'.format(self.rab_subfamily, self.rab_subfamily_score),
-            'Top 5 subfamilies: ',
-            '\n'.join('\t'.join(map(str, x)) for x in self.rab_subfamily_top5)
+        """ G protein annotation summary in a text format
+
+        :return: A string summary of the annotation
+        :rtype: str
+        """
+        data = [
+            ['Sequence ID', self.seqrecord.id],
+            ['G domain', ' '.join(self.gdomain_regions) if self.gdomain_regions else None],
+            ['E-value vs rab db', self.evalue_bh_rabs],
+            ['E-value vs non-rab db', self.evalue_bh_non_rabs],
+            ['RabF motifs', ' '.join(map(str, self.rabf_motifs)) if self.rabf_motifs else None],
+            ['Is Rab?', self.is_rab()]
         ]
-        return '\n'.join(summary)
+        summary = ''
+        for name, value in data:
+            summary += '{:25s}{}\n'.format(name, value)
+        if self.is_rab():
+            summary += '{:25s}{}\n'.format('Top 5 subfamilies',
+                                           ', '.join('{:s} ({:.2g})'.format(name, score) for name, score
+                                                     in self.rab_subfamily_top5))
+        return summary
 
 
 class Phase1(object):
@@ -337,58 +349,6 @@ class Phase2(object):
 
         """
 
-        protein2subfam = self.scan_subfamilies()
-
-        with open(get_db_file('rab_subfamily_model')) as fin:  # load necessary distributions
-            subfam2logistic = json.load(fin)
-
-        self.score = {}
-        self.annotation = {}
-        for prot_id in protein2subfam:
-            nominators = {}
-            denominator = 0.0
-            for rab_subfamily in protein2subfam[prot_id]:
-                # transform evalues
-                try:
-                    t_evalue_phmmer = (-1) * math.log10(protein2subfam[prot_id][rab_subfamily]['evalue_phmmer'])
-                except ValueError:
-                    t_evalue_phmmer = 350
-                try:
-                    t_evalue_hmmscan = (-1) * math.log10(protein2subfam[prot_id][rab_subfamily]['evalue_hmmscan'])
-                except ValueError:
-                    t_evalue_hmmscan = 350
-                # transform log(p-value) into value [0, 1] according to sigmoidal curve
-                x1 = scipy.stats.logistic.cdf(t_evalue_phmmer, subfam2logistic[rab_subfamily]['ph_location'],
-                                 subfam2logistic[rab_subfamily]['ph_scale'])
-                x2 = scipy.stats.logistic.cdf(t_evalue_hmmscan, subfam2logistic[rab_subfamily]['hs_location'],
-                                    subfam2logistic[rab_subfamily]['ph_scale'])
-                # complete naive bayesian classifier computations; 1e+12 is just to not run into numerical
-                # problems because of too small values, cancels out after division
-                nominators[rab_subfamily] = 1e+12 * x1 * x2
-                denominator += nominators[rab_subfamily]
-            #compute the final score
-            for rab_subfamily in protein2subfam[prot_id]:
-                self.score.setdefault(prot_id, {})[rab_subfamily] = nominators[rab_subfamily] / denominator
-
-            # get values to test the remaining two conditions that may lead to RabXs
-            # FIXME is this correct, when evalue_phmmer is identical for few subfamilies the one with lowest identity
-            # will be taken
-            seq_identity_of_best_hit = min((rab_subfamily['evalue_phmmer'], rab_subfamily['identity'])
-                                           for rab_subfamily in protein2subfam[prot_id].values())[1]
-            max_subfamily_score, rab_subfamily_predicted = max((rab_subfamily_score, rab_subfamily)
-                                                               for rab_subfamily, rab_subfamily_score
-                                                               in self.score[prot_id].items())
-            if seq_identity_of_best_hit <= self.subfamily_identity or max_subfamily_score < self.subfamily_score:
-                for rab_subfamily in self.score[prot_id]:
-                    self.score[prot_id][rab_subfamily] /= 2
-                rab_subfamily_predicted = 'rabX'
-                self.score[prot_id]['rabX'] = 0.5
-
-            self.annotation[prot_id] = (rab_subfamily_predicted, self.score[prot_id][rab_subfamily_predicted])
-
-        return 0, ''
-
-    def scan_subfamilies(self):
         protein2subfam = {}
 
         rab_subfamilies = config['rab_subfamilies']
@@ -443,7 +403,58 @@ class Phase2(object):
             for rs, pident in (line.split(',') for line in stdout_value.strip().split('\n') if line):
                 protein2subfam[seq.id][rs]['identity'] = int(float(pident))
 
-        return protein2subfam
+        with open(get_db_file('rab_subfamily_model')) as fin:  # load necessary distributions
+            subfam2logistic = json.load(fin)
+
+        self.score = {}
+        self.annotation = {}
+        for prot_id in protein2subfam:
+            nominators = {}
+            denominator = 0.0
+            for rab_subfamily in protein2subfam[prot_id]:
+                # transform evalues
+                try:
+                    t_evalue_phmmer = (-1) * math.log10(protein2subfam[prot_id][rab_subfamily]['evalue_phmmer'])
+                except ValueError:
+                    t_evalue_phmmer = 350
+                try:
+                    t_evalue_hmmscan = (-1) * math.log10(protein2subfam[prot_id][rab_subfamily]['evalue_hmmscan'])
+                except ValueError:
+                    t_evalue_hmmscan = 350
+                # transform log(p-value) into value [0, 1] according to sigmoidal curve
+                x1 = scipy.stats.logistic.cdf(t_evalue_phmmer, subfam2logistic[rab_subfamily]['ph_location'],
+                                 subfam2logistic[rab_subfamily]['ph_scale'])
+                x2 = scipy.stats.logistic.cdf(t_evalue_hmmscan, subfam2logistic[rab_subfamily]['hs_location'],
+                                    subfam2logistic[rab_subfamily]['ph_scale'])
+                # complete naive bayesian classifier computations; 1e+12 is just to not run into numerical
+                # problems because of too small values, cancels out after division
+                nominators[rab_subfamily] = 1e+12 * x1 * x2
+                denominator += nominators[rab_subfamily]
+            #compute the final score
+            for rab_subfamily in protein2subfam[prot_id]:
+                self.score.setdefault(prot_id, {})[rab_subfamily] = nominators[rab_subfamily] / denominator
+
+            # get values to test the remaining two conditions that may lead to RabXs
+            # FIXME is this correct, when evalue_phmmer is identical for few subfamilies the one with lowest identity
+            # will be taken
+            seq_identity_of_best_hit = min((rab_subfamily['evalue_phmmer'], rab_subfamily['identity'])
+                                           for rab_subfamily in protein2subfam[prot_id].values())[1]
+            max_subfamily_score, rab_subfamily_predicted = max((rab_subfamily_score, rab_subfamily)
+                                                               for rab_subfamily, rab_subfamily_score
+                                                               in self.score[prot_id].items())
+            if seq_identity_of_best_hit <= self.subfamily_identity or max_subfamily_score < self.subfamily_score:
+                for rab_subfamily in self.score[prot_id]:
+                    self.score[prot_id][rab_subfamily] /= 2
+                rab_subfamily_predicted = 'rabX'
+                self.score[prot_id]['rabX'] = 0.5
+
+            self.annotation[prot_id] = (rab_subfamily_predicted, self.score[prot_id][rab_subfamily_predicted])
+
+    def get_best_subfamily(self):
+        pass
+
+    def get_top_subfamilies(self):
+        pass
 
     def summarize(self):
         print(self.annotation)
@@ -489,9 +500,7 @@ class Rabmyfire(object):
 
             try:
                 phase2 = Phase2(phase1.tmpfname + '.phase2', self.tmp, **self.params)
-                returncode, err_msg = phase2()
-                if returncode != 0:
-                    raise RuntimeError(err_msg)
+                phase2()
 
                 for protein_name, putative_rab in phase1.gproteins.items():
                     if protein_name in phase2.annotation:  # Update annotation if protein was in Phase2
@@ -507,7 +516,6 @@ class Rabmyfire(object):
         return phase1.gproteins.values()
 
 
-# TODO move this to the rabifier script, to keep this file purely as a library
 def main():
     parser = argparse.ArgumentParser(description="Rabifier: a bioinformatic classifier of Rab GTPases (v{})".format(__version__))
     parser.add_argument('-v', '--version', action='version', version=__version__)
@@ -546,7 +554,7 @@ def main():
             predictions = classifier(args.input)
             if args.outfmt == 'text':
                 for putative_rab in predictions:
-                    args.output.write(putative_rab.summarize() + '\n\n')
+                    args.output.write(str(putative_rab) + '\n')
             elif args.outfmt == 'json':
                 d = {putative_rab.seqrecord.id: putative_rab.to_dict() for putative_rab in predictions}
                 json.dump(d, args.output, indent=2)

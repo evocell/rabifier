@@ -12,7 +12,6 @@
     "rab_f_identity_threshold": 0.8
   },
   "seed":{
-    "rab_name_list": "rab_name_list.dat",
     "rab_db": "rab_db.fasta",
     "non_rab_db": "non_rab_db.fasta",
     "rab_f": "rab_f.meme",
