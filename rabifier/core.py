@@ -368,6 +368,7 @@ class Seed(object):
     def build_rab_f_models(self):
         motifs = ('IGVDF', 'KLQIW', 'RFxxxT', 'YYRGA', 'LVYDIT')
 
+        logging.info('Building RabF motif models')
         # Reduce redundancy
         run_cmd_if_file_missing([self.pathfinder['cd-hit'], '-i', self.output['rab_db'], '-o',
                                  self.output['rab_db_reduced'], '-d', '100',
@@ -433,6 +434,7 @@ class Seed(object):
         """ Shrink the non-Rab DB size by reducing sequence redundancy.
         """
 
+        logging.info('Building non-Rab DB')
         run_cmd([self.pathfinder['cd-hit'], '-i', self.path['non_rab_db'], '-o', self.output['non_rab_db'],
                  '-d', '100', '-c', str(config['param']['non_rab_db_identity_threshold']), '-g', '1', '-T', self.cpu])
         os.remove(self.output['non_rab_db'] + '.clstr')

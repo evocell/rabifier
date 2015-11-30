@@ -4,7 +4,7 @@ from rabifier import __version__, __author__, __title__, __license__
 
 
 def readme():
-    with open('README.md') as fin:
+    with open('README.rst') as fin:
         return fin.read()
 
 setup(
