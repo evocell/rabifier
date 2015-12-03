@@ -522,6 +522,8 @@ def main():
     parser.add_argument('input', help="input file name, a fasta file containing protein sequence(s)")
     parser.add_argument('-o', '--output', help="output file name [-]", type=argparse.FileType('wb'), default='-')
     parser.add_argument('--outfmt', help="output format [text]", choices=('text', 'json', 'csv'), default='text')
+    parser.add_argument('--show_positive', action='store_true', help="include only Rab positive predictions in the "
+                                                                      "output")
     parser.add_argument('--cpu', help="maximal number of threads to use [{}]".format(config['param']['cpu']), type=int,
                         default=config['param']['cpu'])
     parser.add_argument('--fast', action='store_true', help="phase 1 speedup: stop if it is not a G protein "
@@ -554,15 +556,18 @@ def main():
             predictions = classifier(args.input)
             if args.outfmt == 'text':
                 for putative_rab in predictions:
-                    args.output.write(str(putative_rab) + '\n')
+                    if putative_rab.is_rab() or not args.show_positive:
+                        args.output.write(str(putative_rab) + '\n')
             elif args.outfmt == 'json':
-                d = {putative_rab.seqrecord.id: putative_rab.to_dict() for putative_rab in predictions}
+                d = {putative_rab.seqrecord.id: putative_rab.to_dict() for putative_rab in predictions
+                     if putative_rab.is_rab() or not args.show_positive}
                 json.dump(d, args.output, indent=2)
             elif args.outfmt == 'csv':
                 writer = csv.writer(args.output)
                 writer.writerow(['id', 'g_domain', 'evalue_bh_rabs', 'evalue_bh_nonrabs', 'rabf', 'is_rab',
                                  'subfamily', 'top_5'])
-                writer.writerows([putative_rab.to_list() for putative_rab in predictions])
+                writer.writerows([putative_rab.to_list() for putative_rab in predictions
+                                  if putative_rab.is_rab() or not args.show_positive])
         except IOError as err:
             parser.error(str(err))
         except RuntimeError as err:
