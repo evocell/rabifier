@@ -1,3 +1,5 @@
+.PHONY: help clean check-dependencies test install develop publish
+
 help:
 	@echo "check-dependencies - check if the third party software is installed"
 	@echo "test - run tests"
@@ -11,7 +13,7 @@ clean:
 	rm -rf dist/
 	rm -rf *.egg-info/
 	rm -rf .eggs/
-	find . -name "*.pyc" -exec rm -f {} +
+	find . -name "*.pyc" -delete
 	find . -name "__pycache__" -exec rm -rf {} +
 
 check-dependencies:
