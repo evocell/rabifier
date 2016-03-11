@@ -10,6 +10,7 @@ def readme():
 setup(
     name=__title__,
     version=__version__,
+    description='A bioinformatic classifier of Rab GTPases',
     long_description=readme(),
     url='https://github.com/evocell/rabifier',
     author=__author__,
@@ -17,6 +18,16 @@ setup(
     packages=['rabifier'],
     license=__license__,
     zip_safe=False,
+    keywords=['Rab', 'classifier', 'bioinformatics'],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+    ],
     install_requires=[
         'biopython',
         'numpy',

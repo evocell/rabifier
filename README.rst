@@ -5,11 +5,11 @@ Rabifier is an automated bioinformatic pipeline for prediction and classificatio
 For more detailed description of the pipeline check the references. 
 If you prefer just to browse Rab GTPases in all sequenced Eukaryotic genomes visit `rabdb.org <http://rabdb.org>`_.
 
-Rabifier is freely distributed software under the GNU General Public License, check the LICENCE file for details.
+Rabifier is freely distributed under the GNU General Public License, check the LICENCE file for details.
 
 Please cite our papers if you use Rabifier in your projects.
 
-* Rabifier2: an improved bioinformatic classifier of Rab GTPases.
+* Rabifier2: an improved bioinformatic classifier of Rab GTPases. Surkont J, et al.
 * Thousands of Rab GTPases for the Cell Biologist. Diekmann Y, et al. PLoS Comput Biol 7(10): e1002217.
   `doi:10.1371/journal.pcbi.1002217 <http://dx.plos.org/10.1371/journal.pcbi.1002217>`_
 

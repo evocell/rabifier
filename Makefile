@@ -1,12 +1,14 @@
-.PHONY: help clean check-dependencies test install develop publish
+.PHONY: clean test install
 
 help:
 	@echo "check-dependencies - check if the third party software is installed"
 	@echo "test - run tests"
 	@echo "clean - remove all temporary and build files"
-	@echo "install - install package"
-	@echo "develop - install package in 'development mode'"
-	@echo "publish - build and release the package"
+	@echo "develop - install the package in the 'development mode'"
+	@echo "install - install the package in the active Python's site-packages"
+	@echo "build - build the package"
+	@echo "publish - package and upload a release"
+	@echo "publish-test - (test) package and upload a release"
 
 clean:
 	rm -rf build/
@@ -25,13 +27,21 @@ check-dependencies:
 test: check-dependencies
 	@echo "Running tests..."
 	@python -m unittest discover --start-directory tests --verbose
-
-install: clean
-	python setup.py install
+	python setup.py test
 
 develop: clean
 	python setup.py develop
 
-publish: clean
-	python setup.py register
-	python setup.py sdist upload
+install: clean
+	python setup.py install
+
+build: clean
+	python setup.py sdist bdist_wheel
+
+publish: build 
+	twine register -r pypitest dist/rabifier*.tar.gz
+	twine upload -r pypi dist/*
+
+publish-test: build 
+	twine register -r pypitest dist/rabifier*.tar.gz
+	twine upload -r pypitest dist/*
