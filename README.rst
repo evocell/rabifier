@@ -30,9 +30,9 @@ Rabifier was tested only on a GNU/Linux operating system, we are not planning to
 
 Rabifier depends on third-party Python libraries:
 
-* biopython (1.66)
-* numpy (1.10.1)
-* scipy (0.16.1)
+* biopython (>=1.66)
+* numpy (>=1.10.1)
+* scipy (>=0.16.1)
 
 Rabifier uses several bioinformatic tools, which are required for most of the classification stages. 
 Ensure that the following programs (or links pointing to them) are available in the system path.
@@ -40,7 +40,7 @@ Ensure that the following programs (or links pointing to them) are available in 
 * `HMMER <http://hmmer.janelia.org/>`_ (3.1b1): ``phmmer``, ``hmmbuild``, ``hmmpress``, ``hmmscan``
 * `BLAST+ <ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/>`_ (2.2.30): ``blastp``
 * `MEME4 <http://meme-suite.org/>`_ (4.10.2): ``meme``, ``mast``
-* `Superfamily <http://supfam.cs.bris.ac.uk/SUPERFAMILY/>`_ (1.75): ``superfamily``
+* `Superfamily <http://supfam.cs.bris.ac.uk/SUPERFAMILY/>`_ (>=1.75): ``superfamily``
   (NOTE: this is a folder containing several Superfamily database files and scripts, see below)
 
 If you have cloned this repository you need to compile the HMMs of Rab subfamilies using ``hmmpress``, i.e. run
@@ -54,7 +54,7 @@ The build process requires additional software.
 * `CD-HIT <http://weizhongli-lab.org/cd-hit/>`_ (v4.6.4): ``cd-hit``
 * `PRANK <http://wasabiapp.org/software/prank/>`_ (v.150803): ``prank``
 * `MAFFT <http://mafft.cbrc.jp/alignment/software/>`_ (v7.221): ``mafft``
-* matplotlib (1.4.3) (optional)
+* `matplotlib <http://matplotlib.org/>`_ (1.4.3) (optional)
 
 To install Superfamily database follow the instructions below (based on the
 `Superfamily website <http://supfam.org/SUPERFAMILY/howto_use_models.html>`_).

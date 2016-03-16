@@ -23,7 +23,7 @@ import tempfile
 
 
 __title__ = 'rabifier'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 __author__ = 'Jaroslaw Surkont'
 __license__ = 'GPLv3'
 __copyright__ = 'Copyright 2015 Jaroslaw Surkont'
