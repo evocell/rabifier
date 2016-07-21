@@ -40,14 +40,6 @@ from .utils import run_cmd, run_cmd_if_file_missing, Pathfinder
 logger = logging.getLogger(__name__)
 
 
-def get_db_file(name):
-    path = os.path.join(os.path.dirname(__file__), 'data', config['seed'][name])
-    if os.path.exists(path):
-        return path
-    else:
-        raise IOError("File '{}' doesn't exist".format(path))
-
-
 class Gprotein(object):
 
     def __init__(self, seqrecord, **kwargs):
@@ -73,7 +65,7 @@ class Gprotein(object):
     def is_best_hit_rab(self):
         if self.evalue_bh_rabs is not None:
             if self.evalue_bh_rabs < self.bh_evalue and \
-                    (self.evalue_bh_rabs <= self.evalue_bh_non_rabs or self.evalue_bh_non_rabs is None):
+                    (self.evalue_bh_non_rabs is None or self.evalue_bh_rabs <= self.evalue_bh_non_rabs):
                 return True
         else:
             return False
@@ -167,6 +159,12 @@ class Phase1(object):
         self.fastafile = fastafile
 
         # Seed database
+        def get_db_file(name):
+            path = os.path.join(kwargs.get('seed_path', config['seed']['path']), config['seed'][name])
+            if os.path.exists(path):
+                return path
+            else:
+                raise IOError("File '{}' doesn't exist".format(path))
         self.rabs_db = kwargs.get('rab_db', get_db_file('rab_db'))
         self.non_rabs_db = kwargs.get('non_rab_db', get_db_file('non_rab_db'))
         self.rabf_motifs = kwargs.get('rab_f', get_db_file('rab_f'))
@@ -320,12 +318,20 @@ class Phase2(object):
         self.check_fastafile()
 
         # Seed database
+        def get_db_file(name):
+            path = os.path.join(kwargs.get('seed_path', config['seed']['path']), config['seed'][name])
+            if os.path.exists(path):
+                return path
+            else:
+                raise IOError("File '{}' doesn't exist".format(path))
         self.rabs_db = kwargs.get('rab_db', get_db_file('rab_db'))
         self.rab_models = kwargs.get('rab_subfamily_hmm', get_db_file('rab_subfamily_hmm'))
         for f in (self.rabs_db, self.rab_models):
             if not os.path.exists(f):
                 logger.error('Database file {} is missing.'.format(f))
                 raise RuntimeError('Database file {} is missing.'.format(f))
+        with open(get_db_file('rab_subfamily_model')) as fin:  # load necessary distributions
+            self.subfam2logistic = json.load(fin)
 
         # Technical parameters
         self.cpu = kwargs.get('cpu', config['param']['cpu'])
@@ -351,10 +357,9 @@ class Phase2(object):
 
         protein2subfam = {}
 
-        rab_subfamilies = config['rab_subfamilies']
         for seq in SeqIO.parse(self.fastafile, 'fasta'):
             protein2subfam[seq.id] = {}
-            for rab_subfam in rab_subfamilies:
+            for rab_subfam in self.subfam2logistic.keys():
                 protein2subfam[seq.id][rab_subfam] = {'evalue_hmmscan': 10, 'evalue_phmmer': 10,
                                                       'bh_phmmer': None, 'identity': 0.0}
 
@@ -403,13 +408,10 @@ class Phase2(object):
             for rs, pident in (line.split(',') for line in stdout_value.strip().split('\n') if line):
                 protein2subfam[seq.id][rs]['identity'] = int(float(pident))
 
-        with open(get_db_file('rab_subfamily_model')) as fin:  # load necessary distributions
-            subfam2logistic = json.load(fin)
-
         self.score = {}
         self.annotation = {}
         for prot_id in protein2subfam:
-            nominators = {}
+            numerators = {}
             denominator = 0.0
             for rab_subfamily in protein2subfam[prot_id]:
                 # transform evalues
@@ -422,17 +424,17 @@ class Phase2(object):
                 except ValueError:
                     t_evalue_hmmscan = 350
                 # transform log(p-value) into value [0, 1] according to sigmoidal curve
-                x1 = scipy.stats.logistic.cdf(t_evalue_phmmer, subfam2logistic[rab_subfamily]['ph_location'],
-                                 subfam2logistic[rab_subfamily]['ph_scale'])
-                x2 = scipy.stats.logistic.cdf(t_evalue_hmmscan, subfam2logistic[rab_subfamily]['hs_location'],
-                                    subfam2logistic[rab_subfamily]['ph_scale'])
+                x1 = scipy.stats.logistic.cdf(t_evalue_phmmer, self.subfam2logistic[rab_subfamily]['ph_location'],
+                                              self.subfam2logistic[rab_subfamily]['ph_scale'])
+                x2 = scipy.stats.logistic.cdf(t_evalue_hmmscan, self.subfam2logistic[rab_subfamily]['hs_location'],
+                                              self.subfam2logistic[rab_subfamily]['ph_scale'])
                 # complete naive bayesian classifier computations; 1e+12 is just to not run into numerical
                 # problems because of too small values, cancels out after division
-                nominators[rab_subfamily] = 1e+12 * x1 * x2
-                denominator += nominators[rab_subfamily]
+                numerators[rab_subfamily] = 1e+12 * x1 * x2
+                denominator += numerators[rab_subfamily]
             #compute the final score
             for rab_subfamily in protein2subfam[prot_id]:
-                self.score.setdefault(prot_id, {})[rab_subfamily] = nominators[rab_subfamily] / denominator
+                self.score.setdefault(prot_id, {})[rab_subfamily] = numerators[rab_subfamily] / denominator
 
             # get values to test the remaining two conditions that may lead to RabXs
             # FIXME is this correct, when evalue_phmmer is identical for few subfamilies the one with lowest identity
@@ -520,7 +522,7 @@ def main():
     parser = argparse.ArgumentParser(description="Rabifier: a bioinformatic classifier of Rab GTPases (v{})".format(__version__))
     parser.add_argument('-v', '--version', action='version', version=__version__)
     parser.add_argument('input', help="input file name, a fasta file containing protein sequence(s)")
-    parser.add_argument('-o', '--output', help="output file name [-]", type=argparse.FileType('wb'), default='-')
+    parser.add_argument('-o', '--output', help="output file name [-]", type=argparse.FileType('w'), default='-')
     parser.add_argument('--outfmt', help="output format [text]", choices=('text', 'json', 'csv'), default='text')
     parser.add_argument('--show_positive', action='store_true', help="include only Rab positive predictions in the "
                                                                       "output")
@@ -538,7 +540,7 @@ def main():
                         help="minimum sequence identity with subfamily's best hit [{}]".format(
                             config['param']['subfamily_identity']))
     parser.add_argument('--subfamily_score', type=float, default=config['param']['subfamily_score'],
-                        help="minimum subfamily score ?? [{}]".format(config['param']['subfamily_score']))
+                        help="minimum subfamily score [{}]".format(config['param']['subfamily_score']))
 
     try:
         args = parser.parse_args()

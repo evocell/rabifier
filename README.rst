@@ -1,6 +1,9 @@
 Rabifier
 ========
 
+.. image:: https://img.shields.io/pypi/v/rabifier.svg
+    :target: https://pypi.python.org/pypi/rabifier
+
 Rabifier is an automated bioinformatic pipeline for prediction and classification of Rab GTPases. 
 For more detailed description of the pipeline check the references. 
 If you prefer just to browse Rab GTPases in all sequenced Eukaryotic genomes visit `rabdb.org <http://rabdb.org>`_.
@@ -54,7 +57,7 @@ The build process requires additional software.
 * `CD-HIT <http://weizhongli-lab.org/cd-hit/>`_ (v4.6.4): ``cd-hit``
 * `PRANK <http://wasabiapp.org/software/prank/>`_ (v.150803): ``prank``
 * `MAFFT <http://mafft.cbrc.jp/alignment/software/>`_ (v7.221): ``mafft``
-* `matplotlib <http://matplotlib.org/>`_ (1.4.3) (optional)
+* `matplotlib <http://matplotlib.org/>`_ (>=1.4.3) (optional)
 
 To install Superfamily database follow the instructions below (based on the
 `Superfamily website <http://supfam.org/SUPERFAMILY/howto_use_models.html>`_).

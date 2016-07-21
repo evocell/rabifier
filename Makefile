@@ -39,7 +39,7 @@ build: clean
 	python setup.py sdist bdist_wheel
 
 publish: build 
-	twine register -r pypitest dist/rabifier*.tar.gz
+	twine register -r pypi dist/rabifier*.tar.gz
 	twine upload -r pypi dist/*
 
 publish-test: build 

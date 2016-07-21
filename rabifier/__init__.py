@@ -23,7 +23,7 @@ import tempfile
 
 
 __title__ = 'rabifier'
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 __author__ = 'Jaroslaw Surkont'
 __license__ = 'GPLv3'
 __copyright__ = 'Copyright 2015 Jaroslaw Surkont'
@@ -32,6 +32,7 @@ __copyright__ = 'Copyright 2015 Jaroslaw Surkont'
 with open(os.path.join(os.path.dirname(__file__), 'config.json')) as fin:
     config = json.load(fin)
 config['tmp'] = tempfile.gettempdir()
+config['seed']['path'] = os.path.join(os.path.dirname(__file__), 'data')
 
 # Configure logging
 #logging.basicConfig(level=logging.DEBUG)
